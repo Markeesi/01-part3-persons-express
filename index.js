@@ -1,5 +1,26 @@
 const express = require('express')
 const app = express()
+const morgan = require('morgan')
+const cors = require('cors')
+
+app.use(cors())
+
+app.use(morgan((tokens, req, res) => {
+  const requestData = [
+    `Method: ${tokens.method(req, res)}`,
+    `URL: ${tokens.url(req, res)}`,
+    `Status: ${tokens.status(req, res)}`,
+    `Response Time: ${tokens['response-time'](req, res)} ms`
+  ];
+
+  if (req.method === 'GET') {
+    requestData.push(`Query Params: ${JSON.stringify(req.query)}`);
+  } else {
+    requestData.push(`Request Body: ${JSON.stringify(req.body)}`);
+  }
+
+  return requestData.join(' - ');
+}));
 
 app.use(express.json())
 
@@ -49,7 +70,7 @@ app.get('/info', (req, res) => {
     if (person) {
         response.json(person)
       } else {
-        response.status(404).end()
+        response.status(404).end({ error: 'name must be unique' })
       }
 
   })
